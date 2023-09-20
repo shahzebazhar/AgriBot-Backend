@@ -1,0 +1,10 @@
+openai
+llama-index
+nltk
+gradio
+PyPDF2
+spacy
+fastapi[all]
+uvicorn[standard]
+environs
+requests
