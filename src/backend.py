@@ -12,7 +12,7 @@ env = Env()
 env.read_env()
 
 # Setting the openAI API Key.
-openai.api_key = env("OPENAI_APIKEY")
+openai.api_key = env("OPENAI_API_KEY")
 
 
 @app.get("/")
@@ -25,6 +25,115 @@ async def root() -> Dict:
     return {
         "status_code": HTTPStatus.OK,
         "message": "Homepage for AgriBot chat API. This API currently functions with ChatGPT",
+    }
+
+
+@app.post("/chat_history/en")
+async def english_chat(query: str, history: List[Dict] = []) -> Dict:
+    """This endpoint is aimed to serve english queries by the user. The chatbot will be prompted
+       to respond in English and expect queries in English at this endpoint.
+       Chat History implemented.
+
+    **Args**:<br>
+        ** **query** (*str*): The query to ask from the chatbot.
+        ** **history** (*List[Dict]*) [Default: []]: The history object for the current session.
+                        This is aimed to be sent back as it is to this API.
+
+    **Returns**:<br>
+        ** **Dict**: Response message from the bot.
+    """
+
+    # The prompt to provide.
+    prompt = """
+FODDER CROPS:
+--DELIMITER--
+BAJRA (Pearl Millet):
+CULTIVATION:
+Pearl millet cultivation depends on seasonal conditions.
+Usually, four to five irrigations are sufficient.
+
+DISEASES:
+To protect crops from birds and rodents, scarecrows should be placed every three hours.
+Cultivate the crop along with other farmers to reduce bird damage.
+
+HARVESTING:
+Harvest the crop by pressing the grains with your fingers. If they break with a sound, the crop is ready for harvest.
+Cut the stalks with a sickle, leaving them one foot above the ground. Create raised platforms in the sun, at least one foot high from the ground, to prevent rainwater from collecting.
+
+Allow the stalks to air dry daily until they are completely dry, then thresh them and separate the grains.
+Store the dried grains in clean and dry warehouses, protecting them from insects.
+
+FERTILIZERS:
+For fertilization, use one bag of urea and one bag of DAP C-ACRE per acre during planting.
+When the crop reaches a height of one to two feet, apply one bag of urea per acre.
+
+SPACING AND SOWING:
+The recommended spacing for sowing is usually two seeds per hole, with the first seed sown immediately after planting and the second seed sown after the soil settles.
+
+PREPARING THE SOIL:
+In Pakistan, pearl millet holds a significant position in agriculture. It not only serves as livestock feed but also contributes significantly to human food.
+However, the production of pearl millet in the country is relatively lower compared to other countries.
+In our fields, the yield of pearl millet as a cereal crop is approximately 20 mon per acre. There is ample room for improvement in terms of increased yield.
+In better cultivation areas, proper fertilization, and timely storage and care, the yield can be increased by four to five times.
+In rain-fed areas, after the first monsoon rain and water availability, plow the soil twice to prepare it thoroughly.
+In riverine areas, after canal water availability, plow the soil twice and level it to avoid waterlogging.
+
+PEARL MILLET CROP MANAGEMENT:
+It is better to grow pearl millet in rows with a spacing of 7 cm (2 feet) between rows and 16 inches between plants. Cotton drills can be used for this purpose.
+
+FERTILIZER APPLICATION:
+The recommended fertilizer rate for pearl millet is 4 to 6 kg per acre in line sowing.
+
+THINNING:
+Thinning is not possible when cultivating pearl millet in broadcast form. However, it is essential to thin the crop when grown in rows to ensure good plant growth and increased yield.
+
+OVERSEEDING:
+Overseeding may result in increased yield, but it may not lead to a reasonable yield per acre. To maximize grain production, plant 45,000 plants per acre, thinning the extra plants.
+--DELIMITER--
+MOTT GRASS:
+CULTIVATION:
+For watering information, the crop should be irrigated immediately after the initial planting, and then watering should be done keeping the weather conditions in mind. The frequency of watering can vary in hot weather.
+
+TYPES OF SEEDS:
+For different types of mott grass, the following varieties are available:
+1. Matt
+2. Maluyaim
+3. A 146
+4. N 222
+5. N 224
+Maintaining a distance of three feet between plant and line in the field results in a yield of five thousand culms or clumps per acre. If the spacing between plants and lines is reduced, there will be less space for the plants to produce new shoots.
+    """
+    # The model name [CONSTANT]
+    model_name = "gpt-3.5-turbo"
+
+    # History empty, we will add the system message to it.
+    if len(history) == 0:
+        history.append(
+            {
+                "role": "system",
+                "content": "You are helpful chatbot aimed to answer farmers queries. Provide as\
+ much detail as needed and use the information given below to answer farmers' queries.\n"
+                + prompt,
+            }
+        )
+
+    # Adding the user message.
+    history.append(
+        {"role": "user", "content": query},
+    )
+
+    completion = openai.ChatCompletion.create(
+        model=model_name,
+        messages=history,
+    )
+    response = completion.to_dict()["choices"][0].to_dict()["message"].to_dict()
+    # Adding the bot response to the history.
+    history.append(response)
+    # Returning the message from bot and the history, the history is to be received as is.
+    return {
+        "status_code": HTTPStatus.OK,
+        "message": response["content"],
+        "history": history,
     }
 
 
