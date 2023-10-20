@@ -3,3 +3,6 @@ fastapi[all]
 uvicorn[standard]
 environs
 requests
+transformers
+sentencepiece
+gradio
