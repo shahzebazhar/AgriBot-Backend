@@ -4,3 +4,4 @@ torch== 2.2.2
 gtts== 2.5.1
 scikit-learn== 1.4.2
 requests== 2.32.2
+googletrans==4.0.0-rc1

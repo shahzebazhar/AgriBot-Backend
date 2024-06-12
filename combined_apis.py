@@ -1,4 +1,5 @@
 from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import FileResponse
 import requests
 import torch
 import os
@@ -13,13 +14,8 @@ os.getcwd()
 app = FastAPI()
 
 API_URL_STT = "https://api-inference.huggingface.co/models/khuzaimakt/whisper-small-ur-kt"
-headers_STT = {"Authorization": "Bearer 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"}
+headers_STT = {"Authorization": "Bearer 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"}
 
-API_URL_LLM = "https://api-inference.huggingface.co/models/meta-llama/Llama-2-7b-chat-hf"
-headers_LLM = {"Authorization": "Bearer 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"}
-
-# model_tts = VitsModel.from_pretrained("facebook/mms-tts-urd-script_arabic")
-# tokenizer_tts = AutoTokenizer.from_pretrained("facebook/mms-tts-urd-script_arabic")
 
 @app.post("/Speech-To-Text/")
 async def speech_to_text(mp3_file: UploadFile = File(...)):
@@ -56,11 +52,11 @@ async def llm_answer_extract(text:str):
 
 @app.post("/Text-To-Speech/")
 async def text_to_speech(text: str):
+    output_file = "output_tts.mp3"
+    tts = gtts.gTTS(text, lang="ur")
+    tts.save(output_file)
 
-    tts = gtts.gTTS(text,lang="ur")
-    tts.save("output_tts.mp3")
-
-    return {"message": "Text-to-speech conversion complete. Output saved as output_tts.mp3"}
+    return FileResponse(path=output_file, filename=output_file, media_type='audio/mpeg')
 
 
 
